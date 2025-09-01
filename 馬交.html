@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <title>香港郵政貨運系統 (手機版)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <style>
+    .container{background:rgba(0,0,0,.2);backdrop-filter:blur(10px);border-radius:15px;padding:20px}
+    .header{text-align:center;margin-bottom:20px;padding:15px;background:linear-gradient(135deg,#0f4c4c,#2d5a27);border-radius:12px}
+    .header h1{font-size:22px;margin-bottom:6px}
+    .header p{font-size:14px;opacity:.9}
+    .tabs{display:flex;justify-content:space-around;gap:8px;margin-bottom:20px}
+    .tab{padding:12px;text-align:center;background:rgba(0,0,0,.2);border-radius:8px;color:#e8f5e8;border:none;font-size:16px;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:rgba(0,0,0,0)}
+    .tab.active{background:#2d5a27}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .card{background:rgba(0,0,0,.25);border-radius:12px;padding:20px;margin-bottom:20px}
+    .card-title{font-size:18px;font-weight:bold;margin-bottom:15px;color:#90EE90;text-align:center}
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;margin-bottom:5px;font-weight:600}
+    .form-group input{width:150px;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:16px;-webkit-user-select:text;user-select:text}
+    .bag-input{width:80px;}
+    .btn{width:100%;padding:14px;border:none;border-radius:10px;margin:6px 0;font-size:16px;font-weight:600;color:#fff;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation}
+    .btn-primary{background:#2d5a27}
+    .btn-secondary{background:#1a4d3a}
+    .btn-success{background:#20c997}
+    .btn-danger{background:#a0522d}
+    .records-container{
+      background:rgba(0,0,0,.1);
+      border-radius:12px;
+      padding:15px;
+      max-height:none;
+      overflow-y:visible;
+      overflow-x:hidden;
+      font-size: 18px;
+      width: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+    .record-item{background:rgba(0,0,0,.25);border-radius:8px;padding:12px;margin-bottom:12px}
+    .record-header{display:flex;flex-direction:column;margin-bottom:8px}
+    .record-title{font-weight:bold;color:#90EE90}
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .summary-item{background:rgba(0,0,0,.25);border-radius:8px;padding:15px;text-align:center}
+    .summary-label{font-size:13px;opacity:.9}
+    .summary-value{font-size:20px;font-weight:bold;color:#90EE90}
+    .workflow-hint{background:rgba(74,124,89,.2);border:1px solid rgba(144,238,144,.3);border-radius:8px;padding:12px;margin-bottom:15px;text-align:center;font-size:14px}
+    .notification-area{background:rgba(0,0,0,.3);border-radius:8px;padding:15px;margin-top:10px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+    .notification-area #notificationText{flex:1;min-width:200px}
+     .notification-area .btn{flex:0 0 auto;width:auto;padding:12px 16px}
+     @media (max-width: 360px){
+       .notification-area{gap:8px}
+       .notification-area #notificationText{min-width:160px}
+     }
+     .custom-confirm{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center}
+     .custom-confirm-dialog{background:#2d5a27;border-radius:12px;padding:20px;max-width:300px;width:90%;text-align:center}
+     .custom-confirm-title{font-size:18px;font-weight:bold;margin-bottom:15px;color:#90EE90}
+     .custom-confirm-buttons{display:flex;gap:10px;margin-top:15px}
+     .custom-confirm-btn{flex:1;padding:12px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer}
+     .confirm-yes{background:#20c997;color:#fff}
+     .confirm-no{background:#a0522d;color:#fff}
+   /* 儲存歷史表格樣式 */
+    .saved-records-container{background:rgba(0,0,0,0.35);border-radius:12px;padding:15px;max-height:500px;overflow-y:auto;font-size:14px;}
+    .saved-record-table{width:100%;border-collapse:collapse;margin-bottom:15px;background:rgba(0,0,0,0.4);border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+    .saved-record-table th{background:linear-gradient(135deg,#2d5a27,#1e3f1a);color:#ffffff;padding:12px 10px;text-align:center;font-weight:600;border-bottom:2px solid rgba(255,255,255,0.2);font-size:13px;letter-spacing:0.5px;}
+    .saved-record-table td{padding:10px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);color:#eaffea;font-size:13px;transition:background-color 0.2s ease;}
+    .saved-record-table tr:last-child td{border-bottom:none;}
+    .saved-record-table tr:nth-child(even){background:rgba(255,255,255,0.05);}
+    .saved-record-table tr:hover td{background:rgba(144,238,144,0.1);}
+    .saved-record-date{font-weight:bold;color:#90EE90;font-size:14px;margin-bottom:10px;text-align:center;padding:8px;background:rgba(45,90,39,0.3);border-radius:6px;}
+    .detail-section-title{font-weight:bold;color:#90EE90;margin:15px 0 8px 0;font-size:15px;padding:8px 12px;background:rgba(45,90,39,0.2);border-radius:6px;border-left:4px solid #90EE90;}
+    .saved-record-item{margin-bottom:25px;border:1px solid rgba(144,238,144,0.2);border-radius:12px;padding:18px;background:rgba(0,0,0,0.25);box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+    .notification-text-container{background:rgba(0,0,0,0.5);padding:12px;border-radius:8px;margin-top:15px;border-left:4px solid #90EE90;}
+    .manual-plates-info{background:rgba(144,238,144,0.1);padding:10px;border-radius:8px;margin-top:10px;border:1px solid rgba(144,238,144,0.3);}
+    /* 響應式表格 */
+    @media (max-width: 768px) {
+      .saved-record-table th, .saved-record-table td{padding:8px 6px;font-size:12px;}
+      .saved-record-table th{padding:10px 6px;}
+      .detail-section-title{font-size:14px;padding:6px 10px;}
+      .saved-record-date{font-size:13px;}
+    }
+   /* High-contrast overrides for better readability */
+    body{background:#0c1d17;color:#f4fff4;-webkit-font-smoothing:antialiased}
+    .container{background:rgba(0,0,0,0.45)}
+    .card{background:rgba(0,0,0,0.55)}
+    .records-container{background:rgba(0,0,0,0.35);color:#ffffff}
+    .record-item{background:rgba(0,0,0,0.55)}
+    .form-group label{color:#eaffea}
+    .form-group input{background:#0f2a23;border-color:rgba(255,255,255,0.35);color:#ffffff}
+    .form-group input::placeholder{color:rgba(255,255,255,0.65)}
+    .notification-area{background:rgba(0,0,0,0.55)}
+    .summary-label{color:#eaffea}
+    .summary-value{color:#b8ffb8}
+    .tab{background:rgba(255,255,255,0.06)}
+    .tab.active{background:#2d5a27;color:#ffffff}
+    .btn-primary{background:#1b6f36;color:#fff}
+    .btn-secondary{background:#146c43;color:#fff}
+    .btn-danger{background:#b02a37;color:#fff}
+    .btn-success{background:#0e8f5b;color:#fff}
+    .btn:focus-visible,.form-group input:focus-visible,button:focus-visible{outline:3px solid #90EE90;outline-offset:2px}
+    </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0c1d17">
+    <link rel="apple-touch-icon" href="icon-192.svg">
+</head>
+<body>
+  <div id="customConfirm" class="custom-confirm" style="display:none;" aria-hidden="true">
+    <div class="custom-confirm-dialog" role="dialog" aria-modal="true">
+      <div class="custom-confirm-title">確定要清空所有數據嗎？此操作無法撤銷！</div>
+      <div class="custom-confirm-buttons">
+        <button id="confirmNo" class="custom-confirm-btn confirm-no" ontouchstart="">取消</button>
+        <button id="confirmYes" class="custom-confirm-btn confirm-yes" ontouchstart="">確定</button>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="header">
+      <h1>🌿 香港郵政貨運系統</h1>
+      <p>入袋計算 → 本地數據 → 總結報表及通告</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('calculator',this)" ontouchstart="">入袋</button>
+      <button class="tab" onclick="showTab('local',this)" ontouchstart="">本地</button>
+      <button class="tab" onclick="showTab('dashboard',this)" ontouchstart="">總結</button>
+    </div>
+
+    <!-- 入袋計算 -->
+    <div id="calculator" class="tab-content active">
+
+      <div class="card">
+        <div class="card-title">🧮 入袋計算器</div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label>📦 版號 *</label>
+          <select id="plateNumber" class="form-control"></select>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label style="margin-right: 10px;">⚖️ 重量</label>
+          <input type="number" id="weight" step="0.1" min="0" inputmode="decimal" autocomplete="off" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label style="margin-right: 10px;">📊 總件數</label>
+          <input type="number" id="totalItems" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label style="margin-right: 10px;">入袋數</label>
+          <div id="bagInputs" style="display: flex; flex-wrap: wrap; gap: 5px;">
+            <input type="number" class="bag-input" placeholder="袋1" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+            <input type="number" class="bag-input" placeholder="袋2" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+          </div>
+          <button type="button" onclick="addMoreBags()" class="btn btn-secondary" style="width: 80px;">+ 袋</button>
+        </div>
+        <button class="btn btn-primary" onclick="addBaggingRecord()" ontouchstart="">➕ 確認記錄</button>
+
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:flex-start; flex-wrap: wrap;">
+        <div class="card" style="flex:1;">
+          <div class="card-title">📋 已記錄版號</div>
+          <div class="records-container" id="recordsList">
+            <p style="text-align:center;opacity:.7;">尚無記錄</p>
+          </div>
+        </div>
+        <div class="card" style="min-width: 160px;">
+          <div class="card-title">🧮 入袋數</div>
+          <div style="text-align:center;margin:10px 0;">
+            <div>入袋結果</div>
+            <div id="baggingResult" style="font-size:22px;font-weight:bold;color:#90EE90;">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 本地數據 -->
+    <div id="local" class="tab-content">
+
+      <div class="card">
+        <div class="card-title">本地貨管理</div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label style="margin-right: 10px;">⚖️ 重量</label>
+          <input type="number" id="localWeight" step="0.1" min="0" inputmode="decimal" autocomplete="off" oninput="updateLocalData()" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label style="margin-right: 10px;">📊 件數</label>
+          <input type="number" id="localItems" min="0" inputmode="numeric" autocomplete="off" oninput="updateLocalData()" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label style="margin-right: 10px;">🧳 壓縮</label>
+          <input type="number" id="localCompressed" min="0" inputmode="numeric" autocomplete="off" oninput="updateLocalData()" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+        </div>
+        <button class="btn btn-primary" onclick="saveLocalData()" ontouchstart="">💾 保存本地數據</button>
+      </div>
+      <div class="card">
+        <div class="card-title">本地數據統計</div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="summary-label">件數</div><div class="summary-value" id="localItemsDisplay">0</div></div>
+          <div class="summary-item"><div class="summary-label">重量</div><div class="summary-value" id="localWeightDisplay">0.0</div></div>
+          <div class="summary-item"><div class="summary-label">壓縮袋</div><div class="summary-value" id="localCompressedDisplay">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 總結報表 -->
+    <div id="dashboard" class="tab-content">
+
+      <!-- 隱藏入袋統計 div -->
+      <!--
+      <div class="card">
+        <div class="card-title">📈 入袋統計</div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="summary-label">總版數</div><div class="summary-value" id="totalPlates">0</div></div>
+          <div class="summary-item"><div class="summary-label">總件數</div><div class="summary-value" id="totalItemsSum">0</div></div>
+          <div class="summary-item"><div class="summary-label">總重量</div><div class="summary-value" id="totalWeight">0.0</div></div>
+          <div class="summary-item"><div class="summary-label">總壓縮袋</div><div class="summary-value" id="totalCompressed">0</div></div>
+        </div>
+      </div>
+      -->
+      <div class="card">
+        <div class="card-title">🎯 總結報表</div>
+        <div class="summary-grid">
+          <div class="summary-item" style="grid-column: 1; grid-row: 1;"><div class="summary-label">總版數</div><div class="summary-value" id="grandTotalPlates">0</div></div>
+          <div class="summary-item" style="grid-column: 1; grid-row: 2;"><div class="summary-label">總重量</div><div class="summary-value" id="grandTotalWeight">0.0</div></div>
+          <div class="summary-item" style="grid-column: 2; grid-row: 1;"><div class="summary-label">總件數</div><div class="summary-value" id="grandTotalItems">0</div></div>
+          <div class="summary-item" style="grid-column: 2; grid-row: 2;"><div class="summary-label">總壓縮袋</div><div class="summary-value" id="grandTotalCompressed">0</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📢 生成通告</div>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+          <label for="manualPlates" style="margin-right: 10px;">📦 加減版數</label>
+          <input type="number" id="manualPlates" value="" min="0" inputmode="numeric" autocomplete="off" style="width: 80px; height: 40px;" onwheel="return false;" onkeydown="return event.keyCode !== 38 && event.keyCode !== 40;">
+        </div>
+        <button class="btn btn-success" onclick="generateNotification()" ontouchstart="">📢 生成通告文字</button>
+        <div class="notification-area" id="notificationArea" style="display:none;">
+          <div id="notificationText"></div>
+          <button class="btn btn-success" onclick="shareToWhatsApp()" ontouchstart="">📲 發送到 Whatsapp</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 儲存歷史</div>
+        <button class="btn btn-secondary" onclick="showCurrentDataDetails()" ontouchstart="" style="margin-bottom:15px;">📋 查看當前數據詳情</button>
+        <div class="saved-records-container" id="savedRecordsContainer">
+          <p style="text-align:center;opacity:.7;">尚無儲存記錄</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 所有記錄</div>
+        <div class="records-container" id="allRecords">
+          <p style="text-align:center;opacity:.7;">尚無記錄</p>
+        </div>
+        <button type="button" class="btn btn-danger" onclick="clearAllData()" ontouchstart="" style="margin-top:10px;">🗑 清空所有數據</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let baggingRecords=[],localData={weight:0,items:0,compressed:0},savedReports=[];
+
+    function loadData(){
+      // 新增：若 URL 帶有 ?reset=1，先清空本地儲存的數據
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('reset') === '1') {
+        localStorage.removeItem('baggingRecords');
+        localStorage.removeItem('localData');
+      }
+
+      baggingRecords=JSON.parse(localStorage.getItem('baggingRecords'))||[];
+      localData=JSON.parse(localStorage.getItem('localData'))||{weight:0,items:0,compressed:0};
+      savedReports=JSON.parse(localStorage.getItem('savedReports'))||[];
+      renderLocalData();
+      updateRecords();updateDashboard();
+      renderSavedReports();
+      populatePlateNumberSelect(); // 新增：載入時填充版號選擇器
+    }
+    function saveData(){
+      localStorage.setItem('baggingRecords',JSON.stringify(baggingRecords));
+      localStorage.setItem('localData',JSON.stringify(localData));
+      localStorage.setItem('savedReports',JSON.stringify(savedReports));
+    }
+    function showTab(tabName,el){
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');el.classList.add('active');
+      if(tabName==='dashboard')updateDashboard();
+    }
+    function calculateBagging(){
+      const totalItems=parseInt(document.getElementById('totalItems').value)||0;
+      const bagInputs=document.querySelectorAll('#bagInputs .bag-input');
+      let bagsWithContent=0,totalBagItems=0;
+      if(totalItems<0||Array.from(bagInputs).some(input=>parseInt(input.value)<0)){document.getElementById('baggingResult').textContent="請輸入有效數值";return;}
+      bagInputs.forEach(input=>{const val=parseInt(input.value)||0;if(val>0){bagsWithContent++;totalBagItems+=val;}});
+      const remaining=totalItems-totalBagItems;
+      document.getElementById('baggingResult').textContent=remaining+bagsWithContent;
+    }
+    function addMoreBags(){
+      const c=document.getElementById('bagInputs');
+      const idx=c.querySelectorAll('.bag-input').length+1;
+      const input=document.createElement('input');
+      input.type="number";input.className="bag-input";input.placeholder="袋"+idx;input.min="0";
+      input.setAttribute('inputmode','numeric');
+      input.setAttribute('autocomplete','off');
+      input.oninput=calculateBagging;c.appendChild(input);
+    }
+    function addBaggingRecord(){
+      const plateNumberSelect=document.getElementById('plateNumber');
+      const plateNumber=plateNumberSelect.value.trim();
+      const weight=parseFloat(document.getElementById('weight').value)||0;
+      const totalItems=parseInt(document.getElementById('totalItems').value)||0;
+      if(!plateNumber||totalItems<=0){alert("請輸入完整資料");return;}
+      if(baggingRecords.some(r=>r.plateNumber===plateNumber)){alert("版號已存在");return;} // 雖然下拉選單會避免，但仍保留檢查
+      if(weight<0){alert("重量不能為負數");return;}
+      const bagInputs=document.querySelectorAll('#bagInputs .bag-input');
+      let bagsWithContent=0,totalBagItems=0;
+      let bagDetails = []; // 新增：儲存每個袋子的詳細數量
+      bagInputs.forEach((input, index)=>{
+        const val=parseInt(input.value)||0;
+        if(val>0){
+          bagsWithContent++;
+          totalBagItems+=val;
+          bagDetails.push({bagNumber: index + 1, items: val}); // 儲存袋號和數量
+        }
+      });
+      if(bagsWithContent===0){alert("至少輸入一袋數據");return;}
+      const remaining=totalItems-totalBagItems;
+      const finalResult=remaining+bagsWithContent;
+      const record={
+        plateNumber,
+        weight,
+        totalItems,
+        bagsWithContent,
+        totalBagItems,
+        remaining,
+        finalResult,
+        compressedBags:finalResult,
+        bagDetails: bagDetails, // 新增：保存袋子詳細信息
+        timestamp:new Date().toLocaleString('zh-HK')
+      };
+      baggingRecords.push(record);saveData();updateRecords();updateDashboard();clearCalculator();
+      populatePlateNumberSelect(); // 新增：記錄後更新版號選擇器
+    }
+    function updateRecords(){
+      const baggingHtml=baggingRecords.map(r=>`
+        <div class="record-item">
+          <div class="record-header"><span class="record-title">📦 ${r.plateNumber}</span><span>⚖️ ${r.weight}kg</span></div>
+          <div>📊 件數: ${r.totalItems}件<br>📦 壓縮袋: ${r.compressedBags}</div>
+        </div>`).join('');
+
+      const hasLocal = (Number(localData.items)||0)>0 || (Number(localData.weight)||0)>0 || (Number(localData.compressed)||0)>0;
+      const localHtml = hasLocal ? `
+        <div class="record-item" style="background:rgba(74,124,89,.2);border:1px solid rgba(144,238,144,.3);">
+          <div class="record-header"><span class="record-title">🏠 本地數據</span></div>
+          <div>⚖️ 重量: ${Number(localData.weight).toFixed(1)}kg<br>📊 件數: ${localData.items}件<br>📦 壓縮袋: ${localData.compressed}</div>
+        </div>` : '';
+
+      const combined = (baggingHtml + localHtml).trim();
+      const emptyPlaceholder = '<p style="text-align:center;opacity:.7;">尚無記錄</p>';
+      document.getElementById('recordsList').innerHTML = combined || emptyPlaceholder;
+      document.getElementById('allRecords').innerHTML = combined || emptyPlaceholder;
+    }
+    // 新增：僅渲染本地數據，不修改 localData（避免載入時被清零）
+    function renderLocalData(){
+      const weightNum = Number(localData.weight)||0;
+      const itemsNum = Number(localData.items)||0;
+      const compressedNum = Number(localData.compressed)||0;
+      // 同步到輸入框，如果為 0 則顯示為空字串
+      document.getElementById('localWeight').value = weightNum === 0 ? '' : weightNum;
+      document.getElementById('localItems').value = itemsNum === 0 ? '' : itemsNum;
+      document.getElementById('localCompressed').value = compressedNum === 0 ? '' : compressedNum;
+      // 同步到統計展示
+      document.getElementById('localWeightDisplay').textContent = weightNum.toFixed(1);
+      document.getElementById('localItemsDisplay').textContent = itemsNum;
+      document.getElementById('localCompressedDisplay').textContent = compressedNum;
+    }
+
+    // 恢復：更新本地數據並刷新統計與總結（供輸入框 oninput 使用）
+    function updateLocalData(){
+      const weight = parseFloat(document.getElementById('localWeight').value) || 0;
+      const inputItems = document.getElementById('localItems').value.trim(); // 獲取輸入框的字串值
+      const compressed = parseInt(document.getElementById('localCompressed').value) || 0;
+      
+      // 驗證數值有效性
+      const parsedItems = parseInt(inputItems);
+      if(weight < 0 || (!isNaN(parsedItems) && parsedItems < 0) || compressed < 0){
+        alert("請輸入有效數值");
+        return;
+      }
+      
+      // 如果件數沒有輸入（為空字串、無效數字），則等同於壓縮數據
+      const items = (inputItems === '' || isNaN(parsedItems)) ? compressed : parsedItems;
+      
+      // 主動在輸入框為空時顯示提示文字（可選）
+      if(inputItems === '' && compressed > 0) {
+        document.getElementById('localItems').placeholder = '自動等同壓縮數 (' + compressed + ')';
+      } else {
+        document.getElementById('localItems').placeholder = '';
+      }
+      
+      localData.weight = weight;
+      localData.items = items;
+      localData.compressed = compressed;
+
+      document.getElementById('localWeightDisplay').textContent = weight.toFixed(1);
+      document.getElementById('localItemsDisplay').textContent = items;
+      document.getElementById('localCompressedDisplay').textContent = compressed;
+
+      updateDashboard();
+      updateRecords();
+    }
+
+    function saveLocalData(){
+      const weight = parseFloat(document.getElementById('localWeight').value) || 0;
+      const compressed = parseInt(document.getElementById('localCompressed').value) || 0;
+      
+      // 驗證必須輸入項目：重量和壓縮
+      if(weight <= 0) {
+        alert("重量為必須輸入項目，請輸入有效數值");
+        document.getElementById('localWeight').focus();
+        return;
+      }
+      
+      if(compressed <= 0) {
+        alert("壓縮為必須輸入項目，請輸入有效數值");  
+        document.getElementById('localCompressed').focus();
+        return;
+      }
+      
+      updateLocalData();
+      saveData();
+      alert("本地數據已保存");
+    }
+    function updateDashboard(){
+      const totalPlates=baggingRecords.length;
+      const totalItemsSum=baggingRecords.reduce((sum,r)=>sum+r.totalItems,0);
+      const totalWeight=baggingRecords.reduce((sum,r)=>sum+r.weight,0);
+      const totalCompressed=baggingRecords.reduce((sum,r)=>sum+r.compressedBags,0);
+      // document.getElementById('totalPlates').textContent=totalPlates;
+      // document.getElementById('totalItemsSum').textContent=totalItemsSum;
+      // document.getElementById('totalWeight').textContent=totalWeight.toFixed(1);
+      // document.getElementById('totalCompressed').textContent=totalCompressed;
+      const grandTotalItems=totalItemsSum+localData.items;
+      const grandTotalWeight=(totalWeight+localData.weight).toFixed(1);
+      const grandTotalCompressed=totalCompressed+localData.compressed;
+      const grandTotalPlates=totalPlates+(parseInt(document.getElementById('manualPlates').value)||0);
+      document.getElementById('grandTotalItems').textContent=grandTotalItems;
+      document.getElementById('grandTotalWeight').textContent=grandTotalWeight;
+      document.getElementById('grandTotalCompressed').textContent=grandTotalCompressed;
+      document.getElementById('grandTotalPlates').textContent=grandTotalPlates;
+    }
+    function generateNotification(){
+      const manualPlates=parseInt(document.getElementById('manualPlates').value)||0;
+      const totalCompressed=baggingRecords.reduce((sum,r)=>sum+r.compressedBags,0)+localData.compressed;
+      const totalWeight=(baggingRecords.reduce((sum,r)=>sum+r.weight,0)+localData.weight).toFixed(1);
+      const text=`早晨，今日寄${totalCompressed}袋，重${totalWeight}kgs，${baggingRecords.length+manualPlates}版經5A貨櫃碼頭。`;
+      document.getElementById('notificationText').textContent=text;
+      document.getElementById('notificationArea').style.display='block';
+    }
+    function copyToClipboard(){
+      const text=document.getElementById('notificationText').textContent;
+      const doAlert=()=>alert("通告已複製到剪貼板");
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(doAlert).catch(()=>{
+            // Fallback 1: 使用隱藏 textarea + execCommand
+            const ta=document.createElement('textarea');
+            ta.value=text; ta.setAttribute('readonly','');
+            ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0'; ta.style.opacity='0';
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            try{ const ok=document.execCommand('copy'); document.body.removeChild(ta); if(ok){doAlert();} else { throw new Error('execCommand failed'); } }
+            catch(err){ document.body.removeChild(ta); window.prompt('複製失敗，請手動複製以下內容：', text); }
+          });
+        } else {
+          // Fallback 2: 直接使用 execCommand
+          const ta=document.createElement('textarea');
+          ta.value=text; ta.setAttribute('readonly','');
+          ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0'; ta.style.opacity='0';
+          document.body.appendChild(ta);
+          ta.focus(); ta.select();
+          try{ const ok=document.execCommand('copy'); document.body.removeChild(ta); if(ok){doAlert();} else { throw new Error('execCommand failed'); } }
+          catch(err){ document.body.removeChild(ta); window.prompt('複製失敗，請手動複製以下內容：', text); }
+        }
+      }catch(e){
+        // 最終回退：提示手動複製
+        window.prompt('複製失敗，請手動複製以下內容：', text);
+      }
+    }
+    function shareToWhatsApp(){
+      const text=document.getElementById('notificationText').textContent;
+      
+      // 檢測是否為移動設備
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // 移動設備使用 WhatsApp URL scheme
+        const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(text)}`;
+        const webWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        
+        // 首先嘗試開啟 WhatsApp 應用
+        const link = document.createElement('a');
+        link.href = whatsappUrl;
+        link.target = '_blank';
+        
+        // 對於 iOS，如果 WhatsApp 應用無法開啟，則嘗試網頁版
+        if (isIOS) {
+          try {
+            // 嘗試開啟 WhatsApp 應用
+            window.location.href = whatsappUrl;
+            
+            // 如果 3 秒後還在當前頁面，則開啟網頁版
+            setTimeout(() => {
+              if (!document.hidden) {
+                window.open(webWhatsappUrl, '_blank');
+              }
+            }, 3000);
+          } catch (e) {
+            // 如果出錯，直接開啟網頁版
+            window.open(webWhatsappUrl, '_blank');
+          }
+        } else {
+          // Android 設備
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // 備用方案：網頁版
+          setTimeout(() => {
+            window.open(webWhatsappUrl, '_blank');
+          }, 1000);
+        }
+      } else {
+        // 桌面設備使用網頁版
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      }
+    }
+    function clearCalculator(){
+      document.getElementById('plateNumber').value=''; // 清空選中的版號
+      document.getElementById('weight').value='';
+      document.getElementById('totalItems').value='';
+      document.getElementById('bagInputs').innerHTML=`
+        <input type="number" class="bag-input" placeholder="袋1" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">
+        <input type="number" class="bag-input" placeholder="袋2" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">`;
+      document.getElementById('baggingResult').textContent='0';
+      populatePlateNumberSelect(); // 新增：清空後更新版號選擇器
+    }
+    function showCustomConfirm(onYes){
+      const overlay=document.getElementById('customConfirm');
+      const yesBtn=document.getElementById('confirmYes');
+      const noBtn=document.getElementById('confirmNo');
+      const cleanup=()=>{
+        overlay.style.display='none';
+        overlay.setAttribute('aria-hidden','true');
+        yesBtn.onclick=null; noBtn.onclick=null;
+      };
+      yesBtn.onclick=()=>{cleanup();onYes&&onYes();};
+      noBtn.onclick=cleanup;
+      overlay.style.display='flex';
+      overlay.setAttribute('aria-hidden','false');
+    }
+
+    function clearAllData(){
+      showCustomConfirm(()=>{
+        // 1. 清空記憶體變數
+        baggingRecords=[];
+        localData={weight:0,items:0,compressed:0};
+        savedReports=[];
+        
+        // 2. 清空 localStorage
+        localStorage.removeItem('baggingRecords');
+        localStorage.removeItem('localData');
+        localStorage.removeItem('savedReports');
+        
+        // 3. 清空所有輸入欄位
+        document.getElementById('plateNumber').value='';
+        document.getElementById('weight').value='';
+        document.getElementById('totalItems').value='';
+        document.getElementById('bagInputs').innerHTML=`
+          <input type="number" class="bag-input" placeholder="袋1" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">
+          <input type="number" class="bag-input" placeholder="袋2" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">`;
+        document.getElementById('baggingResult').textContent='0';
+        
+        // 4. 清空本地數據輸入欄位
+        document.getElementById('localWeight').value='';
+        document.getElementById('localItems').value='';
+        document.getElementById('localCompressed').value='';
+        document.getElementById('manualPlates').value='0';
+        
+        // 5. 重置統計顯示
+        document.getElementById('localWeightDisplay').textContent='0.0';
+        document.getElementById('localItemsDisplay').textContent='0';
+        document.getElementById('localCompressedDisplay').textContent='0';
+        
+        // 6. 更新所有顯示
+        renderLocalData();
+        updateRecords();
+        updateDashboard();
+        renderSavedReports();
+        populatePlateNumberSelect();
+        
+        // 7. 隱藏通告區域
+        document.getElementById('notificationArea').style.display='none';
+        
+        alert("所有數據已完全清空");
+      });
+    }
+
+    function saveAndGenerateNotification(){
+      // 先生成通告
+      generateNotification();
+      
+      // 收集當前數據
+      const currentDate = new Date().toLocaleDateString('zh-HK', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        weekday: 'short'
+      });
+      
+      const manualPlates=parseInt(document.getElementById('manualPlates').value)||0;
+      const totalCompressed=baggingRecords.reduce((sum,r)=>sum+r.compressedBags,0)+localData.compressed;
+      const totalWeight=(baggingRecords.reduce((sum,r)=>sum+r.weight,0)+localData.weight).toFixed(1);
+      const totalPlates=baggingRecords.length+manualPlates;
+      const totalItems=baggingRecords.reduce((sum,r)=>sum+r.totalItems,0)+localData.items;
+      
+      // 添加調試信息
+      console.log('儲存前數據狀態:', {
+        baggingRecordsCount: baggingRecords.length,
+        baggingRecords: baggingRecords,
+        localData: localData,
+        localDataExists: (localData.weight > 0 || localData.items > 0 || localData.compressed > 0)
+      });
+      
+      // 創建報告記錄 - 使用深複製確保數據完整性
+      const report = {
+        date: currentDate,
+        timestamp: new Date().toLocaleString('zh-HK'),
+        totalPlates: totalPlates,
+        totalWeight: parseFloat(totalWeight),
+        totalCompressed: totalCompressed,
+        totalItems: totalItems,
+        baggingRecords: JSON.parse(JSON.stringify(baggingRecords)), // 深複製入袋記錄
+        localData: JSON.parse(JSON.stringify(localData)), // 深複製本地數據
+        manualPlates: manualPlates,
+        notificationText: document.getElementById('notificationText').textContent
+      };
+      
+      // 驗證數據完整性
+      console.log('即將儲存的報告:', report);
+      
+      // 添加到儲存列表
+      savedReports.unshift(report); // 添加到開頭，最新的在前面
+      
+      // 限制儲存記錄數量（例如最多保存50條）
+      if(savedReports.length > 50) {
+        savedReports = savedReports.slice(0, 50);
+      }
+      
+      // 保存數據
+      saveData();
+      
+      // 更新顯示
+      renderSavedReports();
+      
+      alert('數據已儲存！包含 ' + baggingRecords.length + ' 版詳細記錄和本地數據');
+    }
+
+    function renderSavedReports(){
+      const container = document.getElementById('savedRecordsContainer');
+      
+      if(savedReports.length === 0) {
+        container.innerHTML = '<p style="text-align:center;opacity:.7;">尚無儲存記錄</p>';
+        return;
+      }
+      
+      let html = '';
+      savedReports.forEach((report, index) => {
+        // 創建每版詳細數據表格
+        let baggingDetailsHtml = '';
+        if(report.baggingRecords && report.baggingRecords.length > 0) {
+          baggingDetailsHtml = `
+            <div class="detail-section-title">📦 每版詳細資料 (${report.baggingRecords.length} 版)</div>
+            <table class="saved-record-table">
+              <thead>
+                <tr>
+                  <th>版號</th>
+                  <th>重量 (kg)</th>
+                  <th>總件數</th>
+                  <th>入袋詳情</th>
+                  <th>壓縮結果</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${report.baggingRecords.map(record => {
+                  // 創建袋子詳細信息字串
+                  let bagDetailsStr = '';
+                  if(record.bagDetails && record.bagDetails.length > 0) {
+                    bagDetailsStr = record.bagDetails.map(bag => `袋${bag.bagNumber}: ${bag.items}件`).join('<br>');
+                  } else {
+                    // 如果沒有bagDetails，顯示總袋數
+                    bagDetailsStr = `${record.bagsWithContent || 0}袋`;
+                  }
+                  
+                  return `
+                    <tr>
+                      <td><strong>${record.plateNumber}</strong></td>
+                      <td>${record.weight}</td>
+                      <td>${record.totalItems}</td>
+                      <td style="font-size:12px;line-height:1.4;">${bagDetailsStr}</td>
+                      <td><strong>${record.compressedBags}</strong></td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          `;
+        } else {
+          // 如果沒有每版詳細數據，顯示提示信息
+          baggingDetailsHtml = `
+            <div class="detail-section-title">📦 每版詳細資料</div>
+            <div style="padding:15px;text-align:center;color:#888;background:rgba(0,0,0,0.2);border-radius:8px;">
+              沒有儲存每版的詳細資料
+            </div>
+          `;
+        }
+        
+        // 創建本地數據詳細表格
+        let localDetailsHtml = '';
+        const hasLocalData = report.localData && (report.localData.weight > 0 || report.localData.items > 0 || report.localData.compressed > 0);
+        if(hasLocalData) {
+          localDetailsHtml = `
+            <div class="detail-section-title">🏠 本地數據詳細</div>
+            <table class="saved-record-table">
+              <thead>
+                <tr>
+                  <th>類型</th>
+                  <th>重量 (kg)</th>
+                  <th>總件數</th>
+                  <th>壓縮結果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>本地貨</strong></td>
+                  <td>${report.localData.weight}</td>
+                  <td>${report.localData.items}</td>
+                  <td><strong>${report.localData.compressed}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          `;
+        } else {
+          // 如果沒有本地數據，顯示提示信息
+          localDetailsHtml = `
+            <div class="detail-section-title">🏠 本地數據詳細</div>
+            <div style="padding:15px;text-align:center;color:#888;background:rgba(0,0,0,0.2);border-radius:8px;">
+              沒有儲存本地數據
+            </div>
+          `;
+        }
+        
+        // 手動版數說明
+        let manualPlatesHtml = '';
+        if(report.manualPlates && report.manualPlates > 0) {
+          manualPlatesHtml = `
+            <div class="manual-plates-info">
+              <strong>📝 手動加減版數：</strong> <span style="color:#90EE90;font-weight:bold;">+${report.manualPlates} 版</span>
+            </div>
+          `;
+        }
+        
+        html += `
+          <div class="saved-record-item">
+            <div class="saved-record-date">📅 ${report.date} - ${report.timestamp}</div>
+            
+            <!-- 總結表格 -->
+            <div class="detail-section-title">📊 總結資料</div>
+            <table class="saved-record-table">
+              <thead>
+                <tr>
+                  <th>總版數</th>
+                  <th>總重量 (kg)</th>
+                  <th>總件數</th>
+                  <th>總壓縮袋</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>${report.totalPlates}</strong></td>
+                  <td><strong>${report.totalWeight}</strong></td>
+                  <td><strong>${report.totalItems}</strong></td>
+                  <td><strong>${report.totalCompressed}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+            
+            ${baggingDetailsHtml}
+            ${localDetailsHtml}
+            ${manualPlatesHtml}
+            
+            <div class="notification-text-container">
+              <strong>📢 通告文字：</strong><br>
+              <span style="color:#90EE90;font-size:14px;line-height:1.4;">${report.notificationText}</span>
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+
+    // 新增：填充版號選擇器函數
+    function populatePlateNumberSelect() {
+      const selectElement = document.getElementById('plateNumber');
+      selectElement.innerHTML = ''; // 清空現有選項
+
+      const usedPlateNumbers = new Set(baggingRecords.map(r => r.plateNumber));
+      const startNumber = 1;
+      const endNumber = 999; // 假設版號範圍為 1 到 999，可根據需要調整
+
+      let hasAvailablePlate = false;
+
+      for (let i = startNumber; i <= endNumber; i++) {
+        const plateNum = String(i); // 單純的數字版號
+        if (!usedPlateNumbers.has(plateNum)) {
+          const option = document.createElement('option');
+          option.value = plateNum;
+          option.textContent = plateNum;
+          selectElement.appendChild(option);
+          hasAvailablePlate = true;
+        }
+      }
+
+      if (!hasAvailablePlate) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = '無可用版號';
+        option.disabled = true;
+        selectElement.appendChild(option);
+        selectElement.value = ''; // 確保沒有選中任何值
+      } else {
+        // 如果有可用版號，預設選中第一個
+        selectElement.selectedIndex = 0;
+      }
+    }
+
+    function showCurrentDataDetails(){
+      const container = document.getElementById('savedRecordsContainer');
+      
+      // 直接使用當前的 baggingRecords 和 localData
+      let detailsHtml = `
+        <div class="saved-record-item">
+          <div class="saved-record-date">📅 當前數據詳情 - ${new Date().toLocaleString('zh-HK')}</div>
+      `;
+      
+      // 當前總結
+      const currentTotalWeight = (baggingRecords.reduce((sum,r)=>sum+r.weight,0)+localData.weight).toFixed(1);
+      const currentTotalItems = baggingRecords.reduce((sum,r)=>sum+r.totalItems,0)+localData.items;
+      const currentTotalCompressed = baggingRecords.reduce((sum,r)=>sum+r.compressedBags,0)+localData.compressed;
+      const currentTotalPlates = baggingRecords.length;
+      
+      detailsHtml += `
+          <!-- 當前總結 -->
+          <div class="detail-section-title">📊 當前總結</div>
+          <table class="saved-record-table">
+            <thead>
+              <tr>
+                <th>版數</th>
+                <th>總重量 (kg)</th>
+                <th>總件數</th>
+                <th>總壓縮袋</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>${currentTotalPlates}</strong></td>
+                <td><strong>${currentTotalWeight}</strong></td>
+                <td><strong>${currentTotalItems}</strong></td>
+                <td><strong>${currentTotalCompressed}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+      `;
+      
+      // 入袋記錄詳情
+      if(baggingRecords && baggingRecords.length > 0) {
+        detailsHtml += `
+          <div class="detail-section-title">📦 入袋記錄詳情 (${baggingRecords.length} 版)</div>
+          <table class="saved-record-table">
+            <thead>
+              <tr>
+                <th>版號</th>
+                <th>重量 (kg)</th>
+                <th>總件數</th>
+                <th>入袋詳情</th>
+                <th>壓縮結果</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        baggingRecords.forEach(record => {
+          // 創建袋子詳細信息字串
+          let bagDetailsStr = '';
+          if(record.bagDetails && record.bagDetails.length > 0) {
+            bagDetailsStr = record.bagDetails.map(bag => `袋${bag.bagNumber}: ${bag.items}件`).join('<br>');
+          } else {
+            // 如果沒有bagDetails，顯示總袋數
+            bagDetailsStr = `${record.bagsWithContent || 0}袋`;
+          }
+          
+          detailsHtml += `
+              <tr>
+                <td><strong>${record.plateNumber}</strong></td>
+                <td>${record.weight}</td>
+                <td>${record.totalItems}</td>
+                <td style="font-size:12px;line-height:1.4;">${bagDetailsStr}</td>
+                <td><strong>${record.compressedBags}</strong></td>
+              </tr>
+          `;
+        });
+        
+        detailsHtml += `
+            </tbody>
+          </table>
+        `;
+      } else {
+        detailsHtml += `
+          <div class="detail-section-title">📦 入袋記錄詳情</div>
+          <div style="padding:15px;text-align:center;color:#888;background:rgba(0,0,0,0.2);border-radius:8px;">
+            當前沒有入袋記錄
+          </div>
+        `;
+      }
+      
+      // 本地數據詳情
+      const hasLocalData = (localData.weight > 0 || localData.items > 0 || localData.compressed > 0);
+      if(hasLocalData) {
+        detailsHtml += `
+          <div class="detail-section-title">🏠 本地數據詳情</div>
+          <table class="saved-record-table">
+            <thead>
+              <tr>
+                <th>類型</th>
+                <th>重量 (kg)</th>
+                <th>總件數</th>
+                <th>壓縮結果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>本地貨</strong></td>
+                <td>${localData.weight}</td>
+                <td>${localData.items}</td>
+                <td><strong>${localData.compressed}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      } else {
+        detailsHtml += `
+          <div class="detail-section-title">🏠 本地數據詳情</div>
+          <div style="padding:15px;text-align:center;color:#888;background:rgba(0,0,0,0.2);border-radius:8px;">
+            當前沒有本地數據
+          </div>
+        `;
+      }
+      
+      detailsHtml += `
+        </div>
+      `;
+      
+      container.innerHTML = detailsHtml;
+    }
+
+    window.onload=loadData;
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>{
+        navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+      });
+    }
+    function showTab(tabName,el){
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');el.classList.add('active');
+      if(tabName==='dashboard')updateDashboard();
+    }
+    function calculateBagging(){
+      const totalItems=parseInt(document.getElementById('totalItems').value)||0;
+      const bagInputs=document.querySelectorAll('#bagInputs .bag-input');
+      let bagsWithContent=0,totalBagItems=0;
+      if(totalItems<0||Array.from(bagInputs).some(input=>parseInt(input.value)<0)){document.getElementById('baggingResult').textContent="請輸入有效數值";return;}
+      bagInputs.forEach(input=>{const val=parseInt(input.value)||0;if(val>0){bagsWithContent++;totalBagItems+=val;}});
+      const remaining=totalItems-totalBagItems;
+      document.getElementById('baggingResult').textContent=remaining+bagsWithContent;
+    }
+    function addMoreBags(){
+      const c=document.getElementById('bagInputs');
+      const idx=c.querySelectorAll('.bag-input').length+1;
+      const input=document.createElement('input');
+      input.type="number";input.className="bag-input";input.placeholder="袋"+idx;input.min="0";
+      input.setAttribute('inputmode','numeric');
+      input.setAttribute('autocomplete','off');
+      input.oninput=calculateBagging;c.appendChild(input);
+    }
+    function addBaggingRecord(){
+      const plateNumberSelect=document.getElementById('plateNumber');
+      const plateNumber=plateNumberSelect.value.trim();
+      const weight=parseFloat(document.getElementById('weight').value)||0;
+      const totalItems=parseInt(document.getElementById('totalItems').value)||0;
+      if(!plateNumber||totalItems<=0){alert("請輸入完整資料");return;}
+      if(baggingRecords.some(r=>r.plateNumber===plateNumber)){alert("版號已存在");return;} // 雖然下拉選單會避免，但仍保留檢查
+      if(weight<0){alert("重量不能為負數");return;}
+      const bagInputs=document.querySelectorAll('#bagInputs .bag-input');
+      let bagsWithContent=0,totalBagItems=0;
+      bagInputs.forEach(input=>{const val=parseInt(input.value)||0;if(val>0){bagsWithContent++;totalBagItems+=val;}});
+      if(bagsWithContent===0){alert("至少輸入一袋數據");return;}
+      const remaining=totalItems-totalBagItems;
+      const finalResult=remaining+bagsWithContent;
+      const record={plateNumber,weight,totalItems,bagsWithContent,totalBagItems,remaining,finalResult,compressedBags:finalResult,timestamp:new Date().toLocaleString('zh-HK')};
+      baggingRecords.push(record);saveData();updateRecords();updateDashboard();clearCalculator();
+      populatePlateNumberSelect(); // 新增：記錄後更新版號選擇器
+    }
+    function updateRecords(){
+      const baggingHtml=baggingRecords.map(r=>`
+        <div class="record-item">
+          <div class="record-header"><span class="record-title">📦 ${r.plateNumber}</span><span>⚖️ ${r.weight}kg</span></div>
+          <div>📊 件數: ${r.totalItems}件<br>📦 壓縮袋: ${r.compressedBags}</div>
+        </div>`).join('');
+
+      const hasLocal = (Number(localData.items)||0)>0 || (Number(localData.weight)||0)>0 || (Number(localData.compressed)||0)>0;
+      const localHtml = hasLocal ? `
+        <div class="record-item" style="background:rgba(74,124,89,.2);border:1px solid rgba(144,238,144,.3);">
+          <div class="record-header"><span class="record-title">🏠 本地數據</span></div>
+          <div>⚖️ 重量: ${Number(localData.weight).toFixed(1)}kg<br>📊 件數: ${localData.items}件<br>📦 壓縮袋: ${localData.compressed}</div>
+        </div>` : '';
+
+      const combined = (baggingHtml + localHtml).trim();
+      const emptyPlaceholder = '<p style="text-align:center;opacity:.7;">尚無記錄</p>';
+      document.getElementById('recordsList').innerHTML = combined || emptyPlaceholder;
+      document.getElementById('allRecords').innerHTML = combined || emptyPlaceholder;
+    }
+    // 新增：僅渲染本地數據，不修改 localData（避免載入時被清零）
+    function renderLocalData(){
+      const weightNum = Number(localData.weight)||0;
+      const itemsNum = Number(localData.items)||0;
+      const compressedNum = Number(localData.compressed)||0;
+      
+      // 同步到輸入框，如果為 0 則顯示為空字串
+      document.getElementById('localWeight').value = weightNum === 0 ? '' : weightNum;
+      // 件數特殊處理：如果件數為0但壓縮大於0，則件數顯示為空但統計區顯示壓縮值
+      if(itemsNum === 0 && compressedNum > 0) {
+        document.getElementById('localItems').value = ''; // 輸入框為空
+        document.getElementById('localItemsDisplay').textContent = compressedNum; // 統計區顯示壓縮值
+        localData.items = compressedNum; // 更新實際數據
+      } else {
+        document.getElementById('localItems').value = itemsNum === 0 ? '' : itemsNum;
+        document.getElementById('localItemsDisplay').textContent = itemsNum;
+      }
+      
+      document.getElementById('localCompressed').value = compressedNum === 0 ? '' : compressedNum;
+      // 同步到統計展示
+      document.getElementById('localWeightDisplay').textContent = weightNum.toFixed(1);
+      document.getElementById('localCompressedDisplay').textContent = compressedNum;
+    }
+
+    function saveLocalData(){
+      const weight = parseFloat(document.getElementById('localWeight').value) || 0;
+      const compressed = parseInt(document.getElementById('localCompressed').value) || 0;
+      
+      // 驗證必須輸入項目：重量和壓縮
+      if(weight <= 0) {
+        alert("重量為必須輸入項目，請輸入有效數值");
+        document.getElementById('localWeight').focus();
+        return;
+      }
+      
+      if(compressed <= 0) {
+        alert("壓縮為必須輸入項目，請輸入有效數值");  
+        document.getElementById('localCompressed').focus();
+        return;
+      }
+      
+      updateLocalData();
+      saveData();
+      alert("本地數據已保存");
+    }
+    function updateDashboard(){
+      const totalPlates=baggingRecords.length;
+      const totalItemsSum=baggingRecords.reduce((sum,r)=>sum+r.totalItems,0);
+      const totalWeight=baggingRecords.reduce((sum,r)=>sum+r.weight,0);
+      const totalCompressed=baggingRecords.reduce((sum,r)=>sum+r.compressedBags,0);
+      // document.getElementById('totalPlates').textContent=totalPlates;
+      // document.getElementById('totalItemsSum').textContent=totalItemsSum;
+      // document.getElementById('totalWeight').textContent=totalWeight.toFixed(1);
+      // document.getElementById('totalCompressed').textContent=totalCompressed;
+      const grandTotalItems=totalItemsSum+localData.items;
+      const grandTotalWeight=(totalWeight+localData.weight).toFixed(1);
+      const grandTotalCompressed=totalCompressed+localData.compressed;
+      const grandTotalPlates=totalPlates+(parseInt(document.getElementById('manualPlates').value)||0);
+      document.getElementById('grandTotalItems').textContent=grandTotalItems;
+      document.getElementById('grandTotalWeight').textContent=grandTotalWeight;
+      document.getElementById('grandTotalCompressed').textContent=grandTotalCompressed;
+      document.getElementById('grandTotalPlates').textContent=grandTotalPlates;
+    }
+    function generateNotification(){
+      const manualPlates=parseInt(document.getElementById('manualPlates').value)||0;
+      const totalCompressed=baggingRecords.reduce((sum,r)=>sum+r.compressedBags,0)+localData.compressed;
+      const totalWeight=(baggingRecords.reduce((sum,r)=>sum+r.weight,0)+localData.weight).toFixed(1);
+      const text=`早晨，今日寄${totalCompressed}袋，重${totalWeight}kgs，${baggingRecords.length+manualPlates}版經5A貨櫃碼頭。`;
+      document.getElementById('notificationText').textContent=text;
+      document.getElementById('notificationArea').style.display='block';
+    }
+    function copyToClipboard(){
+      const text=document.getElementById('notificationText').textContent;
+      const doAlert=()=>alert("通告已複製到剪貼板");
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(doAlert).catch(()=>{
+            // Fallback 1: 使用隱藏 textarea + execCommand
+            const ta=document.createElement('textarea');
+            ta.value=text; ta.setAttribute('readonly','');
+            ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0'; ta.style.opacity='0';
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            try{ const ok=document.execCommand('copy'); document.body.removeChild(ta); if(ok){doAlert();} else { throw new Error('execCommand failed'); } }
+            catch(err){ document.body.removeChild(ta); window.prompt('複製失敗，請手動複製以下內容：', text); }
+          });
+        } else {
+          // Fallback 2: 直接使用 execCommand
+          const ta=document.createElement('textarea');
+          ta.value=text; ta.setAttribute('readonly','');
+          ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0'; ta.style.opacity='0';
+          document.body.appendChild(ta);
+          ta.focus(); ta.select();
+          try{ const ok=document.execCommand('copy'); document.body.removeChild(ta); if(ok){doAlert();} else { throw new Error('execCommand failed'); } }
+          catch(err){ document.body.removeChild(ta); window.prompt('複製失敗，請手動複製以下內容：', text); }
+        }
+      }catch(e){
+        // 最終回退：提示手動複製
+        window.prompt('複製失敗，請手動複製以下內容：', text);
+      }
+    }
+    function shareToWhatsApp(){
+      const text=document.getElementById('notificationText').textContent;
+      
+      // 檢測是否為移動設備
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // 移動設備使用 WhatsApp URL scheme
+        const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(text)}`;
+        const webWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        
+        // 首先嘗試開啟 WhatsApp 應用
+        const link = document.createElement('a');
+        link.href = whatsappUrl;
+        link.target = '_blank';
+        
+        // 對於 iOS，如果 WhatsApp 應用無法開啟，則嘗試網頁版
+        if (isIOS) {
+          try {
+            // 嘗試開啟 WhatsApp 應用
+            window.location.href = whatsappUrl;
+            
+            // 如果 3 秒後還在當前頁面，則開啟網頁版
+            setTimeout(() => {
+              if (!document.hidden) {
+                window.open(webWhatsappUrl, '_blank');
+              }
+            }, 3000);
+          } catch (e) {
+            // 如果出錯，直接開啟網頁版
+            window.open(webWhatsappUrl, '_blank');
+          }
+        } else {
+          // Android 設備
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // 備用方案：網頁版
+          setTimeout(() => {
+            window.open(webWhatsappUrl, '_blank');
+          }, 1000);
+        }
+      } else {
+        // 桌面設備使用網頁版
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      }
+    }
+    function clearCalculator(){
+      document.getElementById('plateNumber').value=''; // 清空選中的版號
+      document.getElementById('weight').value='';
+      document.getElementById('totalItems').value='';
+      document.getElementById('bagInputs').innerHTML=`
+        <input type="number" class="bag-input" placeholder="袋1" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">
+        <input type="number" class="bag-input" placeholder="袋2" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">`;
+      document.getElementById('baggingResult').textContent='0';
+      populatePlateNumberSelect(); // 新增：清空後更新版號選擇器
+    }
+    function showCustomConfirm(onYes){
+      const overlay=document.getElementById('customConfirm');
+      const yesBtn=document.getElementById('confirmYes');
+      const noBtn=document.getElementById('confirmNo');
+      const cleanup=()=>{
+        overlay.style.display='none';
+        overlay.setAttribute('aria-hidden','true');
+        yesBtn.onclick=null; noBtn.onclick=null;
+      };
+      yesBtn.onclick=()=>{cleanup();onYes&&onYes();};
+      noBtn.onclick=cleanup;
+      overlay.style.display='flex';
+      overlay.setAttribute('aria-hidden','false');
+    }
+
+    function clearAllData(){
+      showCustomConfirm(()=>{
+        // 1. 清空記憶體變數
+        baggingRecords=[];
+        localData={weight:0,items:0,compressed:0};
+        savedReports=[];
+        
+        // 2. 清空 localStorage
+        localStorage.removeItem('baggingRecords');
+        localStorage.removeItem('localData');
+        localStorage.removeItem('savedReports');
+        
+        // 3. 清空所有輸入欄位
+        document.getElementById('plateNumber').value='';
+        document.getElementById('weight').value='';
+        document.getElementById('totalItems').value='';
+        document.getElementById('bagInputs').innerHTML=`
+          <input type="number" class="bag-input" placeholder="袋1" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">
+          <input type="number" class="bag-input" placeholder="袋2" inputmode="numeric" autocomplete="off" oninput="calculateBagging()" min="0">`;
+        document.getElementById('baggingResult').textContent='0';
+        
+        // 4. 清空本地數據輸入欄位
+        document.getElementById('localWeight').value='';
+        document.getElementById('localItems').value='';
+        document.getElementById('localCompressed').value='';
+        document.getElementById('manualPlates').value='0';
+        
+        // 5. 重置統計顯示
+        document.getElementById('localWeightDisplay').textContent='0.0';
+        document.getElementById('localItemsDisplay').textContent='0';
+        document.getElementById('localCompressedDisplay').textContent='0';
+        
+        // 6. 更新所有顯示
+        renderLocalData();
+        updateRecords();
+        updateDashboard();
+        renderSavedReports();
+        populatePlateNumberSelect();
+        
+        // 7. 隱藏通告區域
+        document.getElementById('notificationArea').style.display='none';
+        
+        alert("所有數據已完全清空");
+      });
+    }
+
+    function saveAndGenerateNotification(){
+      // 先生成通告
+      generateNotification();
+      
+      // 收集當前數據
+      const currentDate = new Date().toLocaleDateString('zh-HK', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        weekday: 'short'
+      });
+      
+      const manualPlates=parseInt(document.getElementById('manualPlates').value)||0;
+      const totalCompressed=baggingRecords.reduce((sum,r)=>sum+r.compressedBags,0)+localData.compressed;
+      const totalWeight=(baggingRecords.reduce((sum,r)=>sum+r.weight,0)+localData.weight).toFixed(1);
+      const totalPlates=baggingRecords.length+manualPlates;
+      const totalItems=baggingRecords.reduce((sum,r)=>sum+r.totalItems,0)+localData.items;
+      
+      // 添加調試信息
+      console.log('儲存前數據狀態:', {
+        baggingRecordsCount: baggingRecords.length,
+        baggingRecords: baggingRecords,
+        localData: localData,
+        localDataExists: (localData.weight > 0 || localData.items > 0 || localData.compressed > 0)
+      });
+      
+      // 創建報告記錄 - 使用深複製確保數據完整性
+      const report = {
+        date: currentDate,
+        timestamp: new Date().toLocaleString('zh-HK'),
+        totalPlates: totalPlates,
+        totalWeight: parseFloat(totalWeight),
+        totalCompressed: totalCompressed,
+        totalItems: totalItems,
+        baggingRecords: JSON.parse(JSON.stringify(baggingRecords)), // 深複製入袋記錄
+        localData: JSON.parse(JSON.stringify(localData)), // 深複製本地數據
+        manualPlates: manualPlates,
+        notificationText: document.getElementById('notificationText').textContent
+      };
+      
+      // 驗證數據完整性
+      console.log('即將儲存的報告:', report);
+      
+      // 添加到儲存列表
+      savedReports.unshift(report); // 添加到開頭，最新的在前面
+      
+      // 限制儲存記錄數量（例如最多保存50條）
+      if(savedReports.length > 50) {
+        savedReports = savedReports.slice(0, 50);
+      }
+      
+      // 保存數據
+      saveData();
+      
+      // 更新顯示
+      renderSavedReports();
+      
+      alert('數據已儲存！包含 ' + baggingRecords.length + ' 版詳細記錄和本地數據');
+    }
+
+    // 新增：填充版號選擇器函數
+    function populatePlateNumberSelect() {
+      const selectElement = document.getElementById('plateNumber');
+      selectElement.innerHTML = ''; // 清空現有選項
+
+      const usedPlateNumbers = new Set(baggingRecords.map(r => r.plateNumber));
+      const startNumber = 1;
+      const endNumber = 999; // 假設版號範圍為 1 到 999，可根據需要調整
+
+      let hasAvailablePlate = false;
+
+      for (let i = startNumber; i <= endNumber; i++) {
+        const plateNum = String(i); // 單純的數字版號
+        if (!usedPlateNumbers.has(plateNum)) {
+          const option = document.createElement('option');
+          option.value = plateNum;
+          option.textContent = plateNum;
+          selectElement.appendChild(option);
+          hasAvailablePlate = true;
+        }
+      }
+
+      if (!hasAvailablePlate) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = '無可用版號';
+        option.disabled = true;
+        selectElement.appendChild(option);
+        selectElement.value = ''; // 確保沒有選中任何值
+      } else {
+        // 如果有可用版號，預設選中第一個
+        selectElement.selectedIndex = 0;
+      }
+    }
+
+    window.onload=loadData;
+  </script>
+</body>
+</html>
