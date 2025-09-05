@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快郵 - 香港派遞包裹導航</title>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6vR2nulZqyhKfKlfZ8gZ8oeOEAznx2vo&libraries=places,drawing&callback=initMap"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .address-input {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .add-btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .addresses-list {
+            margin-top: 20px;
+        }
+        .address-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: move;
+            user-select: none;
+        }
+        .address-item.dragging {
+            opacity: 0.5;
+            background-color: #f0f0f0;
+        }
+        .edit-btn {
+            background-color: #ffc107;
+            color: black;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .remove-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .map-section {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            height: 400px;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            background-color: #e9e9e9;
+            border: 1px solid #ddd;
+        }
+        .route-info {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .optimize-btn {
+            padding: 15px 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+        /* 規劃面板樣式（MVP） */
+        .planning-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .control-row input[type="number"] {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn-secondary {
+            padding: 10px 16px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .clusters-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        .cluster-card {
+            border: 1px solid #e6e6e6;
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+        }
+        .cluster-card .header {
+            padding: 10px 12px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .cluster-card .body {
+            padding: 12px;
+        }
+        .cluster-card .actions {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>快郵派遞導航</h1>
+        </header>
+        
+        <section class="planning-panel">
+
+        
+
+            <h2>分區規劃（MVP）</h2>
+            <div class="control-row">
+                <label for="maxPerCluster">每區最大點數</label>
+                <input type="number" id="maxPerCluster" value="8" min="2" max="23" />
+                <button class="add-btn" onclick="runAutoPlanning()">自動分區與路線規劃</button>
+                <button class="btn-secondary" onclick="enableManualDraw()" disabled title="預留接口">手動繪製分區</button>
+                <button class="btn-secondary" onclick="enableDynamicReorder()" disabled title="預留接口">動態重排</button>
+                <button class="remove-btn" onclick="clearClusters()">清除分區</button>
+            </div>
+            <div id="clustersList" class="clusters-list"></div>
+        </section>
+        
+        <button class="optimize-btn" onclick="optimizeRoute()">生成最優路線（整體）</button>
+        
+        <section class="input-section">
+
+            <div>
+                <input type="text" id="addressInput" class="address-input" placeholder="輸入香港地址">
+                <button class="add-btn" onclick="addAddress()">添加地址</button>
+            </div>
+            <div class="addresses-list" id="addressesList">
+                <!-- 地址列表將在這裡顯示 -->
+            </div>
+        </section>
+        
+        <section class="map-section">
+            <h2>路線地圖</h2>
+            <div id="map">
+                <!-- 地圖將在這裡顯示 -->
+            </div>
+        </section>
+        
+        <section class="route-info">
+            <h2>路線信息</h2>
+            <div id="routeInfo">
+                <p>總距離: <span id="totalDistance">-</span></p>
+                <p>預計時間: <span id="estimatedTime">-</span></p>
+                <div id="routeSteps">
+                    <!-- 路線步驟將在這裡顯示 -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 地址列表
+        let addresses = [];
+        let draggedItem = null;
+        let isDragging = false; // 新增标志，用于区分点击和拖拽
+        let currentMarker; // 全局变量，用于存储当前地图上的标记
+        
+        // 添加地址
+        function addAddress() {
+            const input = document.getElementById('addressInput');
+            const address = input.value.trim();
+            
+            if (address) {
+                addresses.push(address);
+                updateAddressesList();
+                input.value = '';
+            }
+        }
+        
+        // 更新地址列表顯示
+        function updateAddressesList() {
+            const list = document.getElementById('addressesList');
+            list.innerHTML = '';
+            
+            addresses.forEach((address, index) => {
+                const item = document.createElement('div');
+                item.className = 'address-item';
+                item.draggable = true;
+                
+                const addressSpan = document.createElement('span');
+                addressSpan.textContent = address;
+                addressSpan.id = `address-span-${index}`;
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.textContent = '編輯';
+                editBtn.onclick = () => editAddress(index);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = '刪除';
+                removeBtn.onclick = () => removeAddress(index);
+                
+                item.appendChild(addressSpan);
+                item.appendChild(editBtn);
+                item.appendChild(removeBtn);
+                item.addEventListener('click', (e) => {
+                    // 确保点击事件不是拖拽操作的副作用
+                    if (!isDragging) {
+                        // 获取地址的经纬度并定位地图
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ 'address': address }, (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                const location = results[0].geometry.location;
+                                map.setCenter(location);
+                                console.log('Geocode successful:', results[0]);
+                                console.log('Location:', location.lat(), location.lng());
+                                map.setZoom(17); // 设置一个合适的缩放级别，例如17
+
+                                // 清除之前的标记
+                                if (currentMarker) {
+                                    currentMarker.setMap(null);
+                                    console.log('Cleared previous marker.');
+                                }
+
+                                // 在目标位置添加新的标记
+                                currentMarker = new google.maps.Marker({
+                                    position: location,
+                                    map: map,
+                                    animation: google.maps.Animation.DROP // 添加动画效果
+                                });
+                                console.log('New marker created:', currentMarker);
+
+                                // 平滑过渡到目标位置
+                                map.panTo(location);
+
+                            } else {
+                                console.error('Geocode was not successful for the following reason: ' + status);
+                                console.log('Geocode status:', status);
+                            }
+                        });
+                    }
+                });
+                
+                // 添加拖拽事件監聽器
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+                
+                list.appendChild(item);
+            });
+        }
+        
+        // 拖拽開始事件
+        function handleDragStart(e) {
+            draggedItem = this;
+            isDragging = true; // 开始拖拽时设置标志
+            setTimeout(() => {
+                this.classList.add('dragging');
+            }, 0);
+        }
+        
+        // 拖拽過程中的事件
+        function handleDragOver(e) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // 拖拽放置事件
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (draggedItem !== this) {
+                const list = document.getElementById('addressesList');
+                const allItems = [...list.children];
+                const draggedIndex = allItems.indexOf(draggedItem);
+                const targetIndex = allItems.indexOf(this);
+                
+                if (draggedIndex < targetIndex) {
+                    list.insertBefore(draggedItem, this.nextSibling);
+                } else {
+                    list.insertBefore(draggedItem, this);
+                }
+                
+                // 更新地址數組順序
+                const movedAddress = addresses.splice(draggedIndex, 1)[0];
+                addresses.splice(targetIndex, 0, movedAddress);
+            }
+            
+            return false;
+        }
+        
+        // 拖拽結束事件
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            draggedItem = null;
+            // 延迟重置 isDragging，以避免在拖拽结束后立即触发点击事件
+            setTimeout(() => {
+                isDragging = false;
+            }, 50);
+        }
+        
+        // 編輯地址
+        function editAddress(index) {
+            const newAddress = prompt('編輯地址:', addresses[index]);
+            if (newAddress !== null && newAddress.trim() !== '') {
+                addresses[index] = newAddress.trim();
+                updateAddressesList();
+                clearMapOverlays();
+            }
+        }
+        
+        // 刪除地址
+        function removeAddress(index) {
+            addresses.splice(index, 1);
+            updateAddressesList();
+            clearMapOverlays();
+        }
+        
+function clearClusters() {
+    document.getElementById('clustersList').innerHTML = '';
+    if (window.clusterMarkers) {
+        window.clusterMarkers.forEach(marker => marker.setMap(null));
+        window.clusterMarkers = [];
+    }
+    if (window.clusterPolygons) {
+        window.clusterPolygons.forEach(polygon => polygon.setMap(null));
+        window.clusterPolygons = [];
+    }
+    console.log('Cleared all clusters');
+}
+
+        // 生成最優路線
+        function optimizeRoute() {
+            if (addresses.length < 2) {
+                alert('請至少輸入兩個地址以生成路線。');
+                return;
+            }
+            calculateAndDisplayRoute();
+        }
+
+        // 計算並顯示路線
+        function calculateAndDisplayRoute() {
+            const waypoints = addresses.slice(1, addresses.length - 1).map(address => ({
+                location: address,
+                stopover: true
+            }));
+
+            directionsService.route(
+                {
+                    origin: addresses[0],
+                    destination: addresses[addresses.length - 1],
+                    waypoints: waypoints,
+                    optimizeWaypoints: true,
+                    travelMode: google.maps.TravelMode.DRIVING
+                },
+                (response, status) => {
+                    if (status === 'OK') {
+                        directionsRenderer.setDirections(response);
+                        const route = response.routes[0];
+                        let totalDistance = 0;
+                        let totalDuration = 0;
+
+                        for (let i = 0; i < route.legs.length; i++) {
+                            totalDistance += route.legs[i].distance.value;
+                            totalDuration += route.legs[i].duration.value;
+                        }
+
+                        document.getElementById('totalDistance').innerText = (totalDistance / 1000).toFixed(2) + ' 公里';
+                        document.getElementById('estimatedTime').innerText = (totalDuration / 60).toFixed(0) + ' 分鐘';
+
+                        const routeSteps = document.getElementById('routeSteps');
+                        routeSteps.innerHTML = '';
+                        route.legs.forEach((leg, index) => {
+                            const legDiv = document.createElement('div');
+                            legDiv.innerHTML = `<h3>第 ${index + 1} 段路線: ${leg.start_address} 到 ${leg.end_address}</h3>`;
+                            const stepsList = document.createElement('ol');
+                            leg.steps.forEach(step => {
+                                const stepItem = document.createElement('li');
+                                stepItem.innerHTML = step.instructions;
+                                stepsList.appendChild(stepItem);
+                            });
+                            legDiv.appendChild(stepsList);
+                            routeSteps.appendChild(legDiv);
+                        });
+
+                    } else {
+                        window.alert('路線請求失敗，原因：' + status);
+                    }
+                }
+            );
+        }
+        
+        // 允許按Enter鍵添加地址
+        document.getElementById('addressInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addAddress();
+            }
+        });
+
+        let map;
+        let directionsService;
+        let directionsRenderer;
+        let geocoder;
+        let markers = [];
+        let clusterPolygons = [];
+        let clusterColors = ['#145A32','#196F3D','#1E8449','#239B56','#27AE60','#2ECC71','#17A589','#0E6655','#145A32'];
+        let clustersData = [];
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 22.3193, lng: 114.1694 }, // 香港中心坐標
+                zoom: 12,
+            });
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+            geocoder = new google.maps.Geocoder();
+        }
+
+        // 規劃相關函數（自動分區 + 區內最優路線 + 擴展接口）
+        function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+        function geocodeOne(address){
+            return new Promise((resolve, reject)=>{
+                geocoder.geocode({ address }, (results, status)=>{
+                    if(status === 'OK' && results && results[0]){
+                        const loc = results[0].geometry.location;
+                        resolve({ address, lat: loc.lat(), lng: loc.lng() });
+                    } else {
+                        // 增加详细的错误信息
+                        reject(new Error(`Geocoding failed for ${address}: Status - ${status}, Results - ${JSON.stringify(results)}`));
+                    }
+                });
+            });
+        }
+
+        async function geocodeAddressesSequential(addrList){
+            const out = [];
+            for(const a of addrList){
+                try {
+                    const p = await geocodeOne(a);
+                    out.push(p);
+                } catch(e){
+                    console.warn('地理編碼失敗：', a, e.message);
+                }
+                await sleep(120);
+            }
+            return out;
+        }
+
+        function toXY(pt){
+            const rad = Math.PI/180;
+            return { x: pt.lng * Math.cos(pt.lat*rad), y: pt.lat };
+        }
+
+        function kMeans(points, k, maxIter=20){
+            if(points.length === 0) return [];
+            const centroids = [];
+            const used = new Set();
+            while(centroids.length < k){
+                const idx = Math.floor(Math.random()*points.length);
+                if(!used.has(idx)){
+                    used.add(idx);
+                    centroids.push({ lat: points[idx].lat, lng: points[idx].lng });
+                }
+            }
+            let assignments = new Array(points.length).fill(-1);
+            for(let iter=0; iter<maxIter; iter++){
+                // Assign
+                let changed = false;
+                for(let i=0;i<points.length;i++){
+                    let best=-1, bestD=Infinity;
+                    const pxy = toXY(points[i]);
+                    for(let c=0;c<centroids.length;c++){
+                        const cxy = toXY(centroids[c]);
+                        const dx = pxy.x - cxy.x, dy = pxy.y - cxy.y;
+                        const d = dx*dx + dy*dy;
+                        if(d < bestD){ bestD = d; best = c; }
+                    }
+                    if(assignments[i] !== best){ assignments[i] = best; changed = true; }
+                }
+                // Recompute centroids
+                const sums = centroids.map(()=>({x:0,y:0,count:0,latSum:0,lngSum:0}));
+                for(let i=0;i<points.length;i++){
+                    const a = assignments[i];
+                    if(a>=0){
+                        const p = points[i];
+                        const xy = toXY(p);
+                        sums[a].x += xy.x; sums[a].y += xy.y; sums[a].count++;
+                        sums[a].latSum += p.lat; sums[a].lngSum += p.lng;
+                    }
+                }
+                for(let c=0;c<centroids.length;c++){
+                    if(sums[c].count>0){
+                        centroids[c] = { lat: sums[c].latSum/sums[c].count, lng: sums[c].lngSum/sums[c].count };
+                    }
+                }
+                if(!changed) break;
+            }
+            // Build clusters
+            const clusters = centroids.map(()=>({ centroid:null, members:[] }));
+            for(let c=0;c<centroids.length;c++) clusters[c].centroid = centroids[c];
+            for(let i=0;i<points.length;i++){
+                const a = assignments[i];
+                if(a>=0){ clusters[a].members.push(points[i]); }
+            }
+            return clusters.filter(cl => cl.members.length>0);
+        }
+
+        function convexHull(points){
+            if(points.length < 3) return [];
+            const pts = points.map(p=>({x:p.lng,y:p.lat, ref:p})).sort((a,b)=> a.x===b.x? a.y-b.y : a.x-b.x);
+            const cross = (o,a,b)=> (a.x-o.x)*(b.y-o.y) - (a.y-o.y)*(b.x-o.x);
+            const lower=[]; for(const p of pts){ while(lower.length>=2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop(); lower.push(p); }
+            const upper=[]; for(let i=pts.length-1;i>=0;i--){ const p=pts[i]; while(upper.length>=2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop(); upper.push(p); }
+            const hull = lower.slice(0, lower.length-1).concat(upper.slice(0, upper.length-1));
+            return hull.map(h=>({ lat: h.y, lng: h.x }));
+        }
+
+        function clearMapOverlays(){
+            markers.forEach(m=>m.setMap(null)); markers=[];
+            clusterPolygons.forEach(p=>p.setMap(null)); clusterPolygons=[];
+        }
+
+        function drawClusters(clusters){
+            const bounds = new google.maps.LatLngBounds();
+            clusters.forEach((cl, idx)=>{
+                const color = clusterColors[idx % clusterColors.length];
+                cl.members.forEach(m=>{
+                    const marker = new google.maps.Marker({
+                        position: {lat:m.lat, lng:m.lng},
+                        map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 6,
+                            fillColor: color,
+                            fillOpacity: 0.9,
+                            strokeWeight: 1,
+                            strokeColor: '#ffffff'
+                        },
+                        title: m.address
+                    });
+                    markers.push(marker);
+                    bounds.extend(marker.getPosition());
+                });
+                if(cl.members.length >= 3){
+                    const hull = convexHull(cl.members);
+                    const poly = new google.maps.Polygon({
+                        paths: hull,
+                        strokeColor: color,
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        fillColor: color,
+                        fillOpacity: 0.12,
+                        map
+                    });
+                    clusterPolygons.push(poly);
+                }
+            });
+            if(!bounds.isEmpty()) map.fitBounds(bounds);
+        }
+
+        function renderClustersList(clusters){
+            const list = document.getElementById('clustersList');
+            list.innerHTML = '';
+            clusters.forEach((cl, idx)=>{
+                const color = clusterColors[idx % clusterColors.length];
+                const card = document.createElement('div');
+                card.className = 'cluster-card';
+                card.innerHTML = `
+                    <div class="header" style="background:${color}">分區 #${idx+1}</div>
+                    <div class="body">
+                        <p>點數：${cl.members.length}</p>
+                        <p id="clusterSummary-${idx}">總距離：-，預計時間：-</p>
+                        <div class="actions">
+                            <button class="add-btn" onclick="computeClusterRoute(${idx})">顯示路線</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function routeRequest(options){
+            return new Promise((resolve, reject)=>{
+                directionsService.route(options, (response, status)=>{
+                    if(status === 'OK') resolve(response);
+                    else reject(new Error(status));
+                });
+            });
+        }
+
+        async function computeClusterRoute(idx, opts={}){
+            const silent = !!opts.silent;
+            const cluster = clustersData[idx];
+            if(!cluster || cluster.members.length < 2){
+                alert('該分區點數不足以規劃路線');
+                return;
+            }
+            if(cluster.members.length > 25){
+                alert('該分區點數超過 25，請調小每區最大點數或分批處理。');
+                return;
+            }
+            const pts = cluster.members;
+            const origin = { lat: pts[0].lat, lng: pts[0].lng };
+            const destination = { lat: pts[pts.length-1].lat, lng: pts[pts.length-1].lng };
+            const waypoints = pts.slice(1, pts.length-1).map(p=>({ location: {lat:p.lat, lng:p.lng}, stopover: true }));
+            try{
+                const res = await routeRequest({
+                    origin,
+                    destination,
+                    waypoints,
+                    optimizeWaypoints: true,
+                    travelMode: google.maps.TravelMode.DRIVING
+                });
+                let totalDistance = 0, totalDuration = 0;
+                const route = res.routes[0];
+                for(const leg of route.legs){
+                    totalDistance += leg.distance.value;
+                    totalDuration += leg.duration.value;
+                }
+                const summaryEl = document.getElementById(`clusterSummary-${idx}`);
+                if(summaryEl){
+                    summaryEl.textContent = `總距離：${(totalDistance/1000).toFixed(2)} 公里，預計時間：${(totalDuration/60).toFixed(0)} 分鐘`;
+                }
+                if(!silent){
+                    directionsRenderer.setDirections(res);
+                }
+                return res;
+            } catch(e){
+                console.warn('分區路線計算失敗：', e.message);
+                if(!silent) alert('分區路線計算失敗：'+e.message);
+            }
+        }
+
+        async function runAutoPlanning(){
+            if(addresses.length < 3){
+                alert('請至少輸入 3 個地址後再進行分區規劃。');
+                return;
+            }
+            const maxPer = parseInt(document.getElementById('maxPerCluster').value || '8', 10);
+            try{
+                const pts = await geocodeAddressesSequential(addresses);
+                if(pts.length < 2){
+                    alert('地理編碼結果不足，請檢查地址是否正確。');
+                    return;
+                }
+                const k = Math.max(1, Math.ceil(pts.length / Math.max(2, maxPer)));
+                const clusters = kMeans(pts, k);
+                clustersData = clusters;
+                clearMapOverlays();
+                drawClusters(clusters);
+                renderClustersList(clusters);
+                // 自動為每個分區預計算路線（僅更新摘要，不渲染地圖）
+                for(let i=0;i<clusters.length;i++){
+                    await computeClusterRoute(i, { silent: true });
+                    await sleep(100);
+                }
+                // 完成後，使用者可點擊「顯示路線」觀看任一分區的詳細行車線
+            } catch(e){
+                alert('自動分區與規劃失敗：'+ e.message);
+            }
+        }
+
+        function enableManualDraw(){
+            // 預留接口：之後可啟用 DrawingManager 讓使用者手動畫多邊形作為分區
+            alert('手動繪製分區：即將推出');
+        }
+        function enableDynamicReorder(){
+            // 預留接口：之後可允許拖拽站點跨分區，並觸發局部重排
+            alert('動態重排：即將推出');
+        }
+
+        // 在頁面加載時初始化地圖
+        window.onload = initMap;
+
+        async function panToAddress(address) {
+            try {
+                const result = await geocodeOne(address);
+                if (result) {
+                    map.panTo({ lat: result.lat, lng: result.lng });
+                    map.setZoom(16); // 设置一个合适的缩放级别
+                }
+            } catch (e) {
+                console.error('定位地址失敗:', e.message);
+                alert('定位地址失敗: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "name": "香港郵政貨運系統 (手機版)",
   "short_name": "馬交",
-  "start_url": "./馬交.html",
+  "start_url": "./macau.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0c1d17",

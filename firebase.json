@@ -3,7 +3,9 @@
     "public": ".",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      { "source": "**", "destination": "/馬交.html" }
+      { "source": "**", "destination": "/index.html" },
+      { "source": "/macau.html", "destination": "/馬交.html" },
+      { "source": "/express.html", "destination": "/express.html" }
     ],
     "headers": [
       {"source": "**/*.@(js|css|svg)", "headers": [{"key": "Cache-Control", "value": "public, max-age=31536000, immutable"}]},

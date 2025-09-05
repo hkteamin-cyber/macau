@@ -1,10 +1,12 @@
 const CACHE_NAME = 'imakao-v1';
 const CORE_ASSETS = [
-  './馬交.html',
+  './macau.html',
+  './express.html',
   './manifest.json',
   './service-worker.js',
   './icon-192.svg',
-  './icon-512.svg'
+  './icon-512.svg',
+  'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap' // Google Maps API
 ];
 
 self.addEventListener('install', (event) => {
